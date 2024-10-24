@@ -1,0 +1,39 @@
+image: node:18
+
+stages:
+  - test
+  - deploy
+
+variables:
+  NODE_ENV: test
+
+cache:
+  paths:
+    - node_modules/
+
+test:
+  stage: test
+  script:
+    - npm ci
+    - npm run test
+    - npm run build
+
+deploy_preview:
+  stage: deploy
+  script:
+    - npm i -g vercel
+    - vercel pull --yes --environment=preview --token=$VERCEL_TOKEN
+    - vercel build --token=$VERCEL_TOKEN
+    - vercel deploy --prebuilt --token=$VERCEL_TOKEN
+  only:
+    - merge_requests
+
+deploy_production:
+  stage: deploy
+  script:
+    - npm i -g vercel
+    - vercel pull --yes --environment=production --token=$VERCEL_TOKEN
+    - vercel build --prod --token=$VERCEL_TOKEN
+    - vercel deploy --prebuilt --prod --token=$VERCEL_TOKEN
+  only:
+    - main
